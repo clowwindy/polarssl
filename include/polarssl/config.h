@@ -228,14 +228,14 @@
  * Uncomment this macro to store the AES tables in ROM.
  *
  */
-#define POLARSSL_AES_ROM_TABLES
+//#define POLARSSL_AES_ROM_TABLES
 
 /**
  * \def POLARSSL_CIPHER_MODE_CBC
  *
  * Enable Cipher Block Chaining mode (CBC) for symmetric ciphers.
  */
-#define POLARSSL_CIPHER_MODE_CBC
+//#define POLARSSL_CIPHER_MODE_CBC
 
 /**
  * \def POLARSSL_CIPHER_MODE_CFB
@@ -249,7 +249,7 @@
  *
  * Enable Counter Block Cipher mode (CTR) for symmetric ciphers.
  */
-#define POLARSSL_CIPHER_MODE_CTR
+//#define POLARSSL_CIPHER_MODE_CTR
 
 /**
  * \def POLARSSL_CIPHER_NULL_CIPHER
@@ -779,7 +779,7 @@
  *
  * Enable the checkup functions (*_self_test).
  */
-#define POLARSSL_SELF_TEST
+//#define POLARSSL_SELF_TEST
 
 /**
  * \def POLARSSL_SSL_ALL_ALERT_MESSAGES
@@ -919,7 +919,7 @@
  *
  * Comment this macro to disable support for SSL session tickets
  */
-#define POLARSSL_SSL_SESSION_TICKETS
+//#define POLARSSL_SSL_SESSION_TICKETS
 
 /**
  * \def POLARSSL_SSL_SERVER_NAME_INDICATION

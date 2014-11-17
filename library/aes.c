@@ -385,7 +385,7 @@ static uint32_t RCON[10];
 
 static int aes_init_done = 0;
 
-static void aes_gen_tables( void )
+void aes_gen_tables( void )
 {
     int i, x, y, z;
     int pow[256];
@@ -588,73 +588,6 @@ int aes_setkey_enc( aes_context *ctx, const unsigned char *key,
     return( 0 );
 }
 
-/*
- * AES key schedule (decryption)
- */
-int aes_setkey_dec( aes_context *ctx, const unsigned char *key,
-                    unsigned int keysize )
-{
-    int i, j, ret;
-    aes_context cty;
-    uint32_t *RK;
-    uint32_t *SK;
-
-    aes_init( &cty );
-
-#if defined(POLARSSL_PADLOCK_C) && defined(PADLOCK_ALIGN16)
-    if( aes_padlock_ace == -1 )
-        aes_padlock_ace = padlock_supports( PADLOCK_ACE );
-
-    if( aes_padlock_ace )
-        ctx->rk = RK = PADLOCK_ALIGN16( ctx->buf );
-    else
-#endif
-    ctx->rk = RK = ctx->buf;
-
-    /* Also checks keysize */
-    if( ( ret = aes_setkey_enc( &cty, key, keysize ) ) != 0 )
-        goto exit;
-
-    ctx->nr = cty.nr;
-
-#if defined(POLARSSL_AESNI_C) && defined(POLARSSL_HAVE_X86_64)
-    if( aesni_supports( POLARSSL_AESNI_AES ) )
-    {
-        aesni_inverse_key( (unsigned char *) ctx->rk,
-                           (const unsigned char *) cty.rk, ctx->nr );
-        goto exit;
-    }
-#endif
-
-    SK = cty.rk + cty.nr * 4;
-
-    *RK++ = *SK++;
-    *RK++ = *SK++;
-    *RK++ = *SK++;
-    *RK++ = *SK++;
-
-    for( i = ctx->nr - 1, SK -= 8; i > 0; i--, SK -= 8 )
-    {
-        for( j = 0; j < 4; j++, SK++ )
-        {
-            *RK++ = RT0[ FSb[ ( *SK       ) & 0xFF ] ] ^
-                    RT1[ FSb[ ( *SK >>  8 ) & 0xFF ] ] ^
-                    RT2[ FSb[ ( *SK >> 16 ) & 0xFF ] ] ^
-                    RT3[ FSb[ ( *SK >> 24 ) & 0xFF ] ];
-        }
-    }
-
-    *RK++ = *SK++;
-    *RK++ = *SK++;
-    *RK++ = *SK++;
-    *RK++ = *SK++;
-
-exit:
-    aes_free( &cty );
-
-    return( ret );
-}
-
 #define AES_FROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)     \
 {                                               \
     X0 = *RK++ ^ FT0[ ( Y0       ) & 0xFF ] ^   \
@@ -738,37 +671,7 @@ int aes_crypt_ecb( aes_context *ctx,
 
     if( mode == AES_DECRYPT )
     {
-        for( i = ( ctx->nr >> 1 ) - 1; i > 0; i-- )
-        {
-            AES_RROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
-            AES_RROUND( X0, X1, X2, X3, Y0, Y1, Y2, Y3 );
-        }
-
-        AES_RROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
-
-        X0 = *RK++ ^ \
-                ( (uint32_t) RSb[ ( Y0       ) & 0xFF ]       ) ^
-                ( (uint32_t) RSb[ ( Y3 >>  8 ) & 0xFF ] <<  8 ) ^
-                ( (uint32_t) RSb[ ( Y2 >> 16 ) & 0xFF ] << 16 ) ^
-                ( (uint32_t) RSb[ ( Y1 >> 24 ) & 0xFF ] << 24 );
-
-        X1 = *RK++ ^ \
-                ( (uint32_t) RSb[ ( Y1       ) & 0xFF ]       ) ^
-                ( (uint32_t) RSb[ ( Y0 >>  8 ) & 0xFF ] <<  8 ) ^
-                ( (uint32_t) RSb[ ( Y3 >> 16 ) & 0xFF ] << 16 ) ^
-                ( (uint32_t) RSb[ ( Y2 >> 24 ) & 0xFF ] << 24 );
-
-        X2 = *RK++ ^ \
-                ( (uint32_t) RSb[ ( Y2       ) & 0xFF ]       ) ^
-                ( (uint32_t) RSb[ ( Y1 >>  8 ) & 0xFF ] <<  8 ) ^
-                ( (uint32_t) RSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
-                ( (uint32_t) RSb[ ( Y3 >> 24 ) & 0xFF ] << 24 );
-
-        X3 = *RK++ ^ \
-                ( (uint32_t) RSb[ ( Y3       ) & 0xFF ]       ) ^
-                ( (uint32_t) RSb[ ( Y2 >>  8 ) & 0xFF ] <<  8 ) ^
-                ( (uint32_t) RSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
-                ( (uint32_t) RSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
+        // we only need CFB mode
     }
     else /* AES_ENCRYPT */
     {
